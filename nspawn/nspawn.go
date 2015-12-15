@@ -45,19 +45,21 @@ func (n *Nspawn) Container(path string) *Container {
 //
 // for more information see man page systemd-nspawn(1)
 type Container struct {
-	Nspawn         *Nspawn
-	Dir            string
-	AdditionalArgs []string
-	Env            []string
-	Tmpfs          []string
-	Template       string
-	ReadOnly       bool
-	Ephemeral      bool
-	Quiet          bool
-	Boot           bool
-	UUID           string // machine-id
-	Personality    string
-	SELinuxContext string
+	Nspawn              *Nspawn
+	Dir                 string   // directory of the rootfs for this container
+	AdditionalArgs      []string // place for flags to systemd-nspawn that are not covered by this struct
+	Env                 []string
+	Tmpfs               []string
+	Template            string
+	Machine             string // name of this container (default is root of rootfs directory)
+	ReadOnly            bool
+	Ephemeral           bool
+	Quiet               bool
+	Boot                bool
+	UUID                string // machine-id
+	Personality         string
+	SELinuxContext      string
+	SELinuxAPIFSContext string
 }
 
 // flagSetEnv produces the Nspawn flags for setting the needed environment
@@ -73,6 +75,13 @@ func (c *Container) flagSetEnv() []string {
 func (c *Container) flagTemplate() []string {
 	if c.Template != "" {
 		return []string{"--template", c.Template}
+	}
+	return []string{}
+}
+
+func (c *Container) flagMachine() []string {
+	if c.Machine != "" {
+		return []string{"--machine", c.Machine}
 	}
 	return []string{}
 }
@@ -113,6 +122,13 @@ func (c *Container) flagSELinuxContext() []string {
 	return []string{}
 }
 
+func (c *Container) flagSELinuxAPIFSContext() []string {
+	if c.SELinuxAPIFSContext != "" {
+		return []string{"--selinux-apifs-context", c.SELinuxAPIFSContext}
+	}
+	return []string{}
+}
+
 func (c *Container) flagUUID() []string {
 	if c.UUID != "" {
 		return []string{"--uuid", c.UUID}
@@ -149,8 +165,10 @@ func (c *Container) args() []string {
 	for _, fun := range []flagFunc{
 		c.flagBoot,
 		c.flagTmpfs,
+		c.flagMachine,
 		c.flagTemplate,
 		c.flagSELinuxContext,
+		c.flagSELinuxAPIFSContext,
 		c.flagPersonality,
 		c.flagUUID,
 		c.flagReadOnly,
