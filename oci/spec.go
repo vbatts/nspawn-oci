@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/opencontainers/specs"
+	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 // ReadConfigFile unmarshals a JSON body from filename and returns an OCI Spec

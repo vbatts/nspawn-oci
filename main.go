@@ -4,9 +4,9 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path"
+	"strings"
 
-	"github.com/vbatts/oci2nspawn/oci"
+	"github.com/vbatts/nspawn-oci/oci"
 )
 
 var exitCode = 0
@@ -34,7 +34,7 @@ func main() {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		log.Printf("[DEBUG] %#v", w.Container)
-		log.Printf("[DEBUG] %q (%#v)", path.Join(cmd.Args, " "), cmd)
+		log.Printf("[DEBUG] %q (%#v)", strings.Join(cmd.Args, " "), cmd)
 		log.Println(err)
 		exitCode = 1
 		return

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/opencontainers/specs"
-	"github.com/vbatts/oci2nspawn/nspawn"
+	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/vbatts/nspawn-oci/nspawn"
 )
 
 func BundleToContainer(bundlepath string) (*Wrapper, error) {
