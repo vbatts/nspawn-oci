@@ -5,6 +5,9 @@ bundles](https://github.com/opencontainers/runtime-spec)
 
 ### Building
 
+This project uses the Go programming language and is tested with the [Go
+compiler](https://golang.org/dl/). (Results with gccgo may vary)
+
 ```bash
 go get github.com/vbatts/nspawn-oci
 ```
