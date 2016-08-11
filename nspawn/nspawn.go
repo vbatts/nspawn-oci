@@ -60,6 +60,7 @@ type Container struct {
 	Personality         string
 	SELinuxContext      string
 	SELinuxAPIFSContext string
+	RegisterMachine     bool
 }
 
 // flagSetEnv produces the Nspawn flags for setting the needed environment
@@ -158,6 +159,14 @@ func (c *Container) flagAdditionalArgs() []string {
 	return c.AdditionalArgs
 }
 
+// this will default to not registering the container with systemd-machined
+func (c *Container) flagRegisterMachine() []string {
+	if c.RegisterMachine {
+		return []string{"--register=true"}
+	}
+	return []string{"--register=false"}
+}
+
 type flagFunc func() []string
 
 func (c *Container) args() []string {
@@ -177,6 +186,7 @@ func (c *Container) args() []string {
 		c.flagSetEnv,
 		c.flagEphemeral,
 		c.flagAdditionalArgs,
+		c.flagRegisterMachine,
 	} {
 		a = append(a, fun()...)
 	}
