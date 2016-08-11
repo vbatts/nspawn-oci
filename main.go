@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() != 1 {
-		log.Println("too many arguments. Provide the path to the OpenContainer bundle.")
+		log.Println("Provide only the path to the OpenContainer bundle.")
 		exitCode = 1
 		return
 	}
