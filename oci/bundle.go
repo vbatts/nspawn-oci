@@ -45,7 +45,39 @@ func BundleToContainer(bundlepath string) (*Wrapper, error) {
 		c.Env = append(c.Env, e)
 	}
 
-	// Not sure about handling s.Process.Cwd
+	if s.Process.Cwd != "" {
+		c.Cwd = s.Process.Cwd
+	}
+
+	for _, m := range s.Mounts {
+		if m.Type == "bind" {
+			bmp := nspawn.BindMountParam{
+				Src:  m.Source,
+				Dest: m.Destination,
+			}
+
+			isReadOnly := false
+			trimmedOptions := []string{}
+			for _, o := range m.Options {
+				if o == "ro" {
+					isReadOnly = true
+				}
+				if o != "ro" {
+					trimmedOptions = append(trimmedOptions, o)
+				}
+			}
+			if len(trimmedOptions) != 0 {
+				bmp.Options = strings.Join(trimmedOptions, ",")
+			}
+
+			if isReadOnly {
+				c.BindRoMounts = append(c.BindRoMounts, bmp)
+			} else {
+				c.BindMounts = append(c.BindMounts, bmp)
+			}
+		}
+		// TODO contemplate sysfs, none, devtmpfs, proc, etc.
+	}
 
 	return &Wrapper{
 		Spec:      s,

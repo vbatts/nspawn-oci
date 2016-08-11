@@ -54,6 +54,7 @@ type Container struct {
 	Env                 []string
 	Tmpfs               []string
 	Template            string
+	Cwd                 string
 	Machine             string // name of this container (default is root of rootfs directory)
 	ReadOnly            bool
 	Ephemeral           bool
@@ -64,6 +65,8 @@ type Container struct {
 	SELinuxContext      string
 	SELinuxAPIFSContext string
 	RegisterMachine     bool
+	BindMounts          []BindMountParam // array of PATH[:PATH[:OPTIONS]] (see systemd-nspawn(1) for more info)
+	BindRoMounts        []BindMountParam // array of PATH[:PATH[:OPTIONS]] (see systemd-nspawn(1) for more info)
 }
 
 // flagSetEnv produces the Nspawn flags for setting the needed environment
@@ -158,8 +161,23 @@ func (c *Container) flagDirectory() []string {
 	return []string{"-D", c.Dir}
 }
 
+func (c *Container) flagChdir() []string {
+	return []string{fmt.Sprintf("--chdir=%s", c.Cwd)}
+}
+
 func (c *Container) flagAdditionalArgs() []string {
 	return c.AdditionalArgs
+}
+
+func (c *Container) flagBindMounts() []string {
+	args := []string{}
+	for _, bmp := range c.BindMounts {
+		args = append(args, fmt.Sprintf("--bind=%s", bmp.String()))
+	}
+	for _, bmp := range c.BindRoMounts {
+		args = append(args, fmt.Sprintf("--bind-ro=%s", bmp.String()))
+	}
+	return args
 }
 
 // this will default to not registering the container with systemd-machined
@@ -176,6 +194,8 @@ func (c *Container) args() []string {
 	a := []string{}
 	for _, fun := range []flagFunc{
 		c.flagBoot,
+		c.flagBindMounts,
+		c.flagChdir,
 		c.flagTmpfs,
 		c.flagMachine,
 		c.flagTemplate,
@@ -203,4 +223,26 @@ func (c *Container) args() []string {
 func (c *Container) Cmd(arg ...string) *exec.Cmd {
 	args := append(c.args(), arg...)
 	return exec.Command(c.Nspawn.Path, args...)
+}
+
+// BindMountParam for the parameter passed to --bind= and --bind-ro=
+type BindMountParam struct {
+	Src     string
+	Dest    string
+	Options string
+}
+
+// String renders the fields into PATH[:PATH[:OPTIONS]]
+func (bmp BindMountParam) String() string {
+	// XXX what to do here? give them a tmp directory if this is empty?
+	if bmp.Src == "" {
+		return ""
+	}
+	if bmp.Dest != "" {
+		if bmp.Options != "" {
+			return fmt.Sprintf("%s:%s:%s", bmp.Src, bmp.Dest, bmp.Options)
+		}
+		return fmt.Sprintf("%s:%s", bmp.Src, bmp.Dest)
+	}
+	return bmp.Src
 }
