@@ -25,7 +25,10 @@ func BundleToContainer(bundlepath string) (*Wrapper, error) {
 		return nil, err
 	}
 
-	c := nspawn.NewContainer(root)
+	c, err := nspawn.NewContainer(root)
+	if err != nil {
+		return nil, err
+	}
 	c.ReadOnly = s.Root.Readonly
 	c.Machine = s.Hostname
 

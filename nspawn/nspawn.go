@@ -7,10 +7,8 @@ import (
 )
 
 var (
-	// DefaultNspawn is the default binary called as nspawn
-	DefaultNspawn = Nspawn{
-		Path: "/usr/bin/systemd-nspawn",
-	}
+	// DefaultNspawnPath is the standard location of the nspawn binary
+	DefaultNspawnPath = "/usr/bin/systemd-nspawn"
 
 	// DefaultContainerDir is where machinectl stores the directories of root
 	// filesystems, by default.
@@ -22,9 +20,14 @@ func MachinesAvailable() ([]string, error) {
 	return filepath.Glob(filepath.Join(DefaultContainerDir, "*"))
 }
 
-// NewContainer is a convenience method for using the DefaultNspawn
-func NewContainer(rootfs string) *Container {
-	return DefaultNspawn.Container(rootfs)
+// NewContainer is a convenience method for framing up container access to the system nspawn
+func NewContainer(rootfs string) (*Container, error) {
+	npath, err := exec.LookPath(filepath.Base(DefaultNspawnPath))
+	if err != nil {
+		return nil, err
+	}
+	n := Nspawn{Path: npath}
+	return n.Container(rootfs), nil
 }
 
 // Nspawn is a producer of calls to a container

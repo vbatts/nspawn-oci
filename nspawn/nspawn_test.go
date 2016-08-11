@@ -16,8 +16,10 @@ func TestMachines(t *testing.T) {
 func TestSetEnv(t *testing.T) {
 	e := "FARTS=true"
 
-	n := DefaultNspawn
-	c := n.Container("/home/containers/debian-jessie/")
+	c, err := NewContainer("/home/containers/debian-jessie/")
+	if err != nil {
+		t.Fatal(err)
+	}
 	c.Env = append(c.Env, e)
 	c.Quiet = true
 	cmd := c.Cmd("/bin/cat", "/proc/self/environ")
