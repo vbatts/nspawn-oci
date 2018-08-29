@@ -8,8 +8,8 @@ bundles](https://github.com/opencontainers/runtime-spec)
 This project uses the Go programming language and is tested with the [Go
 compiler](https://golang.org/dl/). (Results with gccgo may vary)
 
-```bash
-go get github.com/vbatts/nspawn-oci
+```shell
+go get -u -v github.com/vbatts/nspawn-oci
 ```
 
 ### Usage
@@ -17,10 +17,9 @@ go get github.com/vbatts/nspawn-oci
 Using [skopeo](https://github.com/projectatomic/skopeo) and
 [oci-image-tool](https://github.com/opencontainers/image-spec/tree/master/cmd/oci-image-tool):
 
-```bash
+```shell
 skopeo copy docker://busybox oci:busybox-oci
-mkdir busybox-bundle
-oci-image-tool create-runtime-bundle --ref latest busybox-oci busybox-bundle
+oci-image-tool create --ref platform.os=linux ./busybox-oci/ ./busybox-bundle/
 cd busybox-bundle && sudo nspawn-oci .
 ```
 

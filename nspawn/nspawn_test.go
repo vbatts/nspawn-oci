@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestVersion(t *testing.T) {
+	n := Nspawn{}
+	v, err := n.Version()
+	if err != nil {
+		t.Fatalf("failed to get nspawn version: %s", err)
+	}
+	if v < 200 {
+		t.Errorf("version expected to be recent, but is ancient: %s", v)
+	}
+}
+
 func TestMachines(t *testing.T) {
 	m, err := MachinesAvailable()
 	if err != nil {

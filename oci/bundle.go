@@ -1,7 +1,6 @@
 package oci
 
 import (
-	"errors"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -16,10 +15,6 @@ func BundleToContainer(bundlepath string) (*Wrapper, error) {
 		return nil, err
 	}
 
-	if strings.ToLower(s.Platform.OS) != "linux" {
-		return nil, errors.New("only linux bundles are supported")
-	}
-
 	root, err := filepath.Abs(filepath.Join(bundlepath, s.Root.Path))
 	if err != nil {
 		return nil, err
@@ -31,15 +26,6 @@ func BundleToContainer(bundlepath string) (*Wrapper, error) {
 	}
 	c.ReadOnly = s.Root.Readonly
 	c.Machine = s.Hostname
-
-	// Personality allows for x86 and x86_64, but this _could_ be any number of
-	// other archs ...
-	switch s.Platform.Arch {
-	case "amd64", "x86_64":
-		c.Personality = "x86-64"
-	case "x86", "i386", "i586", "i686", "ix86":
-		c.Personality = "x86"
-	}
 
 	for _, e := range s.Process.Env {
 		c.Env = append(c.Env, e)

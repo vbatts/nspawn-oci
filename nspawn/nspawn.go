@@ -1,9 +1,15 @@
 package nspawn
 
+// systemd-nspawn records of when flags were introduced
+// https://github.com/systemd/systemd/blob/master/NEWS
+
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -32,7 +38,8 @@ func NewContainer(rootfs string) (*Container, error) {
 
 // Nspawn is a producer of calls to a container
 type Nspawn struct {
-	Path string
+	Path    string
+	version int
 }
 
 // Container produces a customizable instance of a contaner to be called using
@@ -42,6 +49,36 @@ func (n *Nspawn) Container(path string) *Container {
 		Nspawn: n,
 		Dir:    path,
 	}
+}
+
+// Version returns the parsed number of this systemd-nspawn version
+func (n *Nspawn) Version() (int, error) {
+	if n.Path == "" {
+		n.Path = DefaultNspawnPath
+	}
+	if n.version > 0 {
+		return n.version, nil
+	}
+	npath, err := exec.LookPath(filepath.Base(n.Path))
+	if err != nil {
+		return 0, err
+	}
+	cmd := exec.Command(npath, "--version")
+	outBuf := bytes.NewBuffer(nil)
+	errBuf := bytes.NewBuffer(nil)
+	cmd.Stdout = outBuf
+	cmd.Stderr = errBuf
+	err = cmd.Run()
+	if err != nil {
+		return 0, err
+	}
+	v := strings.Split(strings.Split(strings.Trim(outBuf.String(), "\n"), "\n")[0], " ")[1]
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		return i, err
+	}
+	n.version = i
+	return i, nil
 }
 
 // Container is a customizable instance for constructing a kernel container with systemd-nspawn
@@ -162,7 +199,11 @@ func (c *Container) flagDirectory() []string {
 }
 
 func (c *Container) flagChdir() []string {
-	return []string{fmt.Sprintf("--chdir=%s", c.Cwd)}
+	// added in 229
+	if i, err := c.Nspawn.Version(); err == nil && i >= 229 {
+		return []string{fmt.Sprintf("--chdir=%s", c.Cwd)}
+	}
+	return []string{}
 }
 
 func (c *Container) flagAdditionalArgs() []string {
